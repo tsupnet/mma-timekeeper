@@ -1,0 +1,279 @@
+/* =========================================================
+   MMA Timekeeper — styles
+   ---------------------------------------------------------
+   CONTROL PANEL: everything you are likely to change is in
+   the :root block below. Change the value, save, reload.
+   Colors are hex codes (#rrggbb). Sizes marked "x clock"
+   are a fraction of the clock's width (.27 = 27%).
+   ========================================================= */
+:root {
+  color-scheme: dark;
+
+  /* ---- Ring colors ---- */
+  --round: #1cc72a;       /* round clock ring (green) */
+  --sub: #2049ff;         /* time-out / break clock ring (amber) */
+  --warn: #e41030;        /* warning red (rings and digits) */
+  --track: #3f609c;       /* empty part of both rings */
+
+  /* ---- Ring thickness ---- */
+  --ring-main-width: 4;   /* round clock ring. Max 10 */
+  --ring-sub-width: 4;    /* time-out / break ring. Max 14 */
+
+  /* ---- Clock sizes (main is always bigger) ---- */
+  --main-size: min(84vw, 42svh);  /* round clock, phone upright (84vw = 84% of screen width) */
+  --sub-size: min(42vw, 21svh);   /* time-out clock, phone upright */
+
+  /* ---- Font ---- */
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-clock: var(--font);      /* digits only. Example: "Courier New", monospace */
+  --weight-clock: 800;            /* digit boldness: 400 normal, 700 bold, 900 heaviest */
+  --weight-label: 800;            /* READY / TIME-OUT / buttons boldness */
+
+  /* ---- Font sizes ---- */
+  --main-time-size: .18;          /* round clock digits (x clock) */
+  --main-label-size: .065;        /* READY / PAUSED / BREAK label (x clock) */
+  --main-label-long-size: .05;    /* FIGHT IN PROGRESS label (x clock) */
+  --sub-time-size: .26;           /* time-out digits (x clock) */
+  --sub-label-size: .09;          /* TIME-OUT / BREAK label (x clock) */
+  --sub-mode-size: .07;           /* "count up · limit 5:00" (x clock) */
+  --round-text-size: clamp(22px, 5.5vw, 34px);  /* "Round 1 of 3" */
+  --button-text-size: 17px;       /* buttons */
+
+  /* ---- Font colors ---- */
+  --text: #f2f4f8;        /* main text, round clock digits */
+  --main-time-color: var(--text);   /* round clock digits */
+  --sub-time-color: var(--text);    /* time-out digits while running */
+  --muted: #8d96a6;       /* grey text: idle clock, READY, small print */
+
+  /* ---- Backgrounds ---- */
+  --bg: #0b0d12;          /* page background */
+  --panel: #616775;       /* Settings and Adjust panels */
+  --panel-2: #1d222d;     /* inputs, grey buttons */
+  --line: #2a303c;        /* borders */
+
+  /* ---- Main buttons (Reset, Adjust, Start, Time-Out) ---- */
+  --button-outline: #ffffff;      /* outline color */
+  --button-outline-width: 2px;    /* outline thickness */
+  --button-height: 54px;          /* button height */
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; background: var(--bg); color: var(--text); }
+body {
+  font-family: var(--font);
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none; user-select: none;
+  overscroll-behavior: none;
+}
+input { -webkit-user-select: text; user-select: text; }
+button { font: inherit; color: inherit; }
+[hidden] { display: none !important; }
+
+.app {
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  padding: env(safe-area-inset-top, 0px) max(16px, env(safe-area-inset-right, 0px)) env(safe-area-inset-bottom, 0px) max(16px, env(safe-area-inset-left, 0px));
+  max-width: 1400px; margin: 0 auto;
+}
+
+/* ---------- top bar ---------- */
+.topbar { display: flex; align-items: center; justify-content: flex-end; gap: 10px; padding-block: 10px 4px; } /* only the gear now, on the right */
+.brand { font-weight: 800; letter-spacing: .12em; text-transform: uppercase; font-size: 13px; color: var(--muted); flex: 1; }
+.chip {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 999px;
+  padding: 7px 12px; font-size: 13px; font-weight: 600; cursor: pointer; min-height: 36px;
+}
+.chip-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); }
+.chip.ok .chip-dot { background: var(--round); }
+.chip.bad { border-color: var(--warn); }
+.chip.bad .chip-dot { background: var(--warn); }
+.icon-btn {
+  width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line);
+  background: var(--panel); display: grid; place-items: center; cursor: pointer; font-size: 18px;
+}
+.icon-btn svg { width: 22px; height: 22px; fill: var(--text); }
+/* Settings gear: plain white gear, no circle or border (still a 44px tap area) */
+.gear-btn { background: transparent; border: 0; }
+.gear-btn svg { width: 28px; height: 28px; fill: #ffffff; }
+
+/* ---------- stage layout (portrait) ---------- */
+.stage {
+  display: grid; justify-items: center; align-content: space-evenly;
+  gap: 8px; min-height: 0; padding-block: 4px 12px;
+}
+.round-info { display: grid; justify-items: center; gap: 6px; }
+.dots { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; max-width: 80vw; }
+.dots i { width: 12px; height: 12px; border-radius: 50%; background: #3a4150; display: block; }
+.dots i.done { background: #56606f; }
+.dots i.now { background: var(--round); box-shadow: 0 0 0 3px rgba(95,208,104,.25); }
+.round-text { font-size: var(--round-text-size); font-weight: var(--weight-label); font-variant-numeric: tabular-nums; }
+
+/* ---------- rings ---------- */
+.main-clock, .sub-clock { position: relative; display: grid; place-items: center; }
+.main-clock { width: var(--main-size); height: var(--main-size); }
+.sub-clock { width: var(--sub-size); height: var(--sub-size); }
+.ring { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+.ring circle { fill: none; }
+.ring-track { stroke: var(--track); stroke-width: var(--ring-main-width); }
+.sub-clock .ring-track { stroke-width: var(--ring-sub-width); }
+.ring-fill { stroke: var(--round); stroke-width: var(--ring-main-width); stroke-linecap: round; transition: stroke .15s; }
+.ring-fill.sub { stroke: var(--sub); stroke-width: var(--ring-sub-width); }
+.ring-fill.hide { stroke-opacity: 0; }
+.ring-fill.warn { stroke: var(--warn); }
+
+.clock-face { position: relative; display: grid; justify-items: center; gap: 2px; text-align: center; }
+.main-time {
+  font-family: var(--font-clock); font-weight: var(--weight-clock); color: var(--main-time-color);
+  font-variant-numeric: tabular-nums; letter-spacing: -.02em; line-height: 1;
+  font-size: calc(var(--main-size) * var(--main-time-size));
+}
+.main-label { font-weight: var(--weight-label); letter-spacing: .14em; font-size: calc(var(--main-size) * var(--main-label-size)); color: var(--round); }
+/* "FIGHT IN PROGRESS" is longer, so it is set a little smaller to fit inside the ring */
+.main-label.long { font-size: calc(var(--main-size) * var(--main-label-long-size)); letter-spacing: .08em; }
+.main-label.warn, .main-time.warn { color: var(--warn); }
+.main-label.idle { color: var(--muted); }
+.main-label.to { color: var(--sub); }
+
+.sub-label { font-weight: var(--weight-label); letter-spacing: .12em; font-size: calc(var(--sub-size) * var(--sub-label-size)); color: var(--sub); }
+.sub-time { font-family: var(--font-clock); font-weight: var(--weight-clock); color: var(--sub-time-color); font-variant-numeric: tabular-nums; line-height: 1; font-size: calc(var(--sub-size) * var(--sub-time-size)); }
+.sub-time.idle { color: var(--muted); }
+.sub-time.warn, .sub-label.warn { color: var(--warn); }
+.sub-mode { font-size: calc(var(--sub-size) * var(--sub-mode-size)); color: var(--muted); font-weight: 600; }
+
+/* flashing warning (can be switched off per alert in Settings) */
+.flash { animation: flash 1s steps(2, jump-none) infinite; }
+@keyframes flash { 0% { opacity: 1; } 100% { opacity: .3; } }
+@media (prefers-reduced-motion: reduce) { .flash { animation-duration: 2s; } }
+
+/* ---------- buttons ---------- */
+.controls { display: grid; grid-template-columns: .9fr .95fr 1.25fr 1.25fr; gap: 8px; width: min(100%, 560px); }
+.btn {
+  border: 1px solid var(--line); background: var(--panel-2); border-radius: 14px;
+  min-height: 56px; padding: 10px 14px; font-weight: var(--weight-label); font-size: var(--button-text-size); letter-spacing: .06em;
+  text-transform: uppercase; cursor: pointer; touch-action: manipulation;
+}
+.btn:focus-visible, .icon-btn:focus-visible, .chip:focus-visible { outline: 3px solid var(--text); outline-offset: 2px; }
+.btn:disabled { opacity: .35; cursor: default; }
+.btn-go { background: var(--round); border-color: var(--round); color: #07130a; font-size: calc(var(--button-text-size) + 1px); min-height: 64px; }
+/* keep button words on one line; shrink a little on very narrow phones */
+.controls .btn {
+  padding-inline: 4px; white-space: nowrap; letter-spacing: .02em;
+  font-size: min(var(--button-text-size), 3.9vw);
+  min-height: var(--button-height);
+  border: var(--button-outline-width) solid var(--button-outline);
+}
+/* Reset: red text; turns solid red after the first tap ("Sure?") */
+.btn-reset { background: var(--panel-2); color: #ff8a80; }
+.btn-reset.armed { background: var(--warn); color: #fff; }
+/* while the round runs, the green button just shows the round number */
+.btn-go.showround:disabled { opacity: 1; background: var(--panel-2); color: var(--round); }
+.btn-to { background: var(--sub); border-color: var(--sub); color: #f7f7f5; font-size: calc(var(--button-text-size) + 1px); min-height: 64px; letter-spacing: .02em; }
+.btn-to.timein { background: var(--panel-2); color: #ffffff; }
+.btn-ghost { background: var(--panel-2); color: var(--text); }
+.btn-step { font-size: 18px; min-height: 58px; }
+.btn-danger { background: transparent; border-color: #5a2a2a; color: #ff8a80; font-size: 14px; }
+.btn-danger.armed { background: var(--warn); border-color: var(--warn); color: #fff; }
+.btn.wide { width: 100%; }
+
+/* ---------- landscape: iPad sideways, laptop, desktop ---------- */
+@media (orientation: landscape) and (min-width: 700px) {
+  :root { --main-size: min(52vw, 72svh); --sub-size: min(26vw, 34svh); } /* clock sizes when sideways */
+  .stage {
+    /* left: round number above the main clock. right: buttons above the time-out clock */
+    grid-template-columns: auto minmax(260px, 1fr);
+    grid-template-rows: auto 1fr 1fr;
+    grid-template-areas: "info ." "main ctl" "main sub";
+    align-content: center; column-gap: 4vw; row-gap: 18px;
+  }
+  .main-clock { grid-area: main; }
+  .round-info { grid-area: info; }
+  .controls { grid-area: ctl; align-self: end; }
+  .sub-clock { grid-area: sub; align-self: start; }
+}
+/* short landscape phones */
+@media (orientation: landscape) and (max-height: 500px) {
+  :root { --sub-size: min(24vw, 38svh); }
+  :root { --main-size: min(48vw, 70svh); } /* clock size, phone sideways */
+  .stage { grid-template-columns: auto 1fr; grid-template-rows: auto 1fr 1fr; grid-template-areas: "info ." "main ctl" "main sub"; align-content: center; column-gap: 20px; row-gap: 6px; }
+  .main-clock { grid-area: main; } .round-info { grid-area: info; } .controls { grid-area: ctl; align-self: end; } .sub-clock { grid-area: sub; align-self: start; }
+  .controls .btn { min-height: 46px; }
+  .round-text { font-size: 20px; }
+}
+
+/* ---------- sheets (Adjust, Settings, reminder) ---------- */
+.sheet {
+  position: fixed; inset: 0; background: rgba(0,0,0,.6); display: flex; align-items: flex-end; justify-content: center;
+  z-index: 10; padding: 16px; padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+}
+.sheet.center { align-items: center; }
+.sheet-panel {
+  width: min(100%, 560px); background: var(--panel); border: 1px solid var(--line); border-radius: 18px;
+  padding: 18px; display: grid; gap: 14px; max-height: 100%;
+}
+.sheet-panel.tall { height: min(92vh, 900px); grid-template-rows: auto 1fr; }
+.sheet-head { display: flex; align-items: center; justify-content: space-between; }
+.sheet h2 { margin: 0; font-size: 22px; }
+.sheet h3 { margin: 18px 0 6px; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.sheet p { margin: 0; line-height: 1.45; }
+.hint { color: var(--muted); font-size: 14px; }
+.hint.small { font-size: 12px; margin-top: 10px; }
+
+.adj-group { display: grid; gap: 8px; }
+.adj-label { font-weight: 700; display: flex; justify-content: space-between; }
+.adj-now { font-variant-numeric: tabular-nums; color: var(--round); }
+.adj-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.adj-row.two { grid-template-columns: 1fr 1fr; }
+
+.set-scroll { overflow-y: auto; -webkit-overflow-scrolling: touch; padding-right: 4px; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+.set-scroll > * { flex-shrink: 0; }
+.set-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; min-height: 48px; }
+.set-row > label { font-weight: 600; }
+.seg { display: inline-flex; background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 3px; gap: 3px; }
+.seg button { border: 0; background: transparent; padding: 9px 12px; border-radius: 8px; font-weight: 700; cursor: pointer; min-height: 40px; }
+.seg button.on { background: var(--text); color: var(--bg); }
+.dur, .stepper { display: inline-flex; align-items: center; gap: 6px; }
+.dur input, .stepper input {
+  width: 58px; text-align: center; background: var(--panel-2); border: 1px solid var(--line); color: var(--text);
+  border-radius: 8px; padding: 9px 4px; font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums;
+}
+.dur span, .unit { color: var(--muted); font-size: 14px; }
+.stepper button { width: 40px; height: 40px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); font-size: 20px; font-weight: 700; cursor: pointer; }
+
+.switch { position: relative; width: 52px; height: 30px; display: inline-block; }
+.switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+.switch span { position: absolute; inset: 0; background: #3a4150; border-radius: 999px; transition: background .15s; cursor: pointer; }
+.switch span::after { content: ""; position: absolute; left: 3px; top: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff; transition: transform .15s; }
+.switch input:checked + span { background: var(--round); }
+.switch input:checked + span::after { transform: translateX(22px); }
+.switch input:focus-visible + span { outline: 3px solid var(--text); outline-offset: 2px; }
+
+.alert-table { display: grid; gap: 8px; }
+.alert-row { display: grid; grid-template-columns: 1fr auto; gap: 8px 10px; align-items: center; background: var(--panel-2); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+.alert-row .name { font-weight: 700; font-size: 15px; grid-column: 1 / -1; }
+.alert-row .ctrls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; grid-column: 1 / -1; }
+.alert-row select { background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 8px; font-size: 15px; min-height: 40px; max-width: 100%; }
+.alert-row .test { border: 1px solid var(--line); background: var(--bg); border-radius: 8px; padding: 8px 12px; min-height: 40px; cursor: pointer; font-weight: 700; }
+.check { display: inline-flex; gap: 8px; align-items: center; font-size: 15px; cursor: pointer; }
+.check input { width: 20px; height: 20px; accent-color: var(--round); }
+.alert-row .na { color: var(--muted); font-size: 13px; }
+
+.sound-list { display: grid; gap: 8px; }
+.sound-item { display: flex; align-items: center; gap: 8px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; }
+.sound-item .sname { flex: 1; font-weight: 600; overflow-wrap: anywhere; }
+.sound-item button { border: 1px solid var(--line); background: var(--bg); border-radius: 8px; padding: 6px 10px; min-height: 38px; cursor: pointer; font-weight: 700; }
+.sound-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.file-btn { position: relative; overflow: hidden; display: inline-flex; align-items: center; font-size: 14px; }
+.file-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.sound-actions .btn { font-size: 14px; min-height: 48px; }
+.record-box { display: flex; align-items: center; gap: 12px; }
+.record-status { font-weight: 700; color: var(--warn); font-variant-numeric: tabular-nums; }
+
+.steps { margin: 0; padding-left: 22px; display: grid; gap: 6px; font-size: 17px; }
+
+.toast {
+  position: fixed; left: 50%; bottom: max(20px, env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
+  background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 10px; font-weight: 700; z-index: 20;
+  max-width: calc(100% - 32px); text-align: center;
+}

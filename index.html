@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>MMA Timekeeper</title>
+<meta name="theme-color" content="#0b0d12">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Timekeeper">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app" class="app">
+
+  <!-- ===== TOP BAR ===== -->
+  <header class="topbar">
+    <!-- Title and "Screen stays on" button removed. Keep-screen-on is now a switch in Settings. -->
+    <button id="openSettings" class="icon-btn gear-btn" type="button" aria-label="Settings">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.4 13a7.5 7.5 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.6 7.6 0 0 0-1.7-1L15 3.5h-4l-.4 2.5a7.6 7.6 0 0 0-1.7 1l-2.4-1-2 3.4L6.6 11a7.5 7.5 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7.6 7.6 0 0 0 1.7 1l.4 2.5h4l.4-2.5a7.6 7.6 0 0 0 1.7-1l2.4 1 2-3.4-2.1-1.6zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg>
+    </button>
+  </header>
+
+  <main class="stage">
+    <!-- ===== ROUND COUNTER ===== -->
+    <section class="round-info" aria-live="polite">
+      <div id="roundDots" class="dots"></div>
+      <div id="roundText" class="round-text">Round 1 of 3</div>
+    </section>
+
+    <!-- ===== MAIN (ROUND) CLOCK ===== -->
+    <section class="main-clock" id="mainClock">
+      <svg class="ring" viewBox="0 0 100 100" aria-hidden="true">
+        <circle class="ring-track" cx="50" cy="50" r="45"></circle>
+        <circle class="ring-fill" id="mainRing" cx="50" cy="50" r="45"></circle>
+      </svg>
+      <div class="clock-face">
+        <div class="main-time" id="mainTime">5:00</div>
+        <div class="main-label" id="mainLabel">READY</div>
+      </div>
+    </section>
+
+    <!-- ===== BUTTONS (between the two clocks) ===== -->
+    <section class="controls">
+      <button id="btnReset" class="btn btn-reset" type="button">Reset</button>
+      <button id="btnAdjust" class="btn btn-ghost" type="button">Adjust</button>
+      <button id="btnMain" class="btn btn-go" type="button">Start</button>
+      <button id="btnTimeout" class="btn btn-to" type="button" disabled>Time-Out</button>
+    </section>
+
+    <!-- ===== SECONDARY (TIME-OUT / BREAK) CLOCK ===== -->
+    <section class="sub-clock" id="subClock">
+      <svg class="ring" viewBox="0 0 100 100" aria-hidden="true">
+        <circle class="ring-track" cx="50" cy="50" r="43"></circle>
+        <circle class="ring-fill sub" id="subRing" cx="50" cy="50" r="43"></circle>
+      </svg>
+      <div class="clock-face">
+        <div class="sub-label" id="subLabel">TIME-OUT</div>
+        <div class="sub-time" id="subTime">0:00</div>
+        <div class="sub-mode" id="subMode">count up · max 5:00</div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===== ADJUST SHEET ===== -->
+  <div id="adjustSheet" class="sheet" hidden>
+    <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="adjustTitle">
+      <div class="sheet-head">
+        <h2 id="adjustTitle">Adjust</h2>
+        <button class="icon-btn" type="button" data-close="adjustSheet" aria-label="Close">✕</button>
+      </div>
+
+      <div class="adj-group">
+        <div class="adj-label">Round clock <span id="adjNow" class="adj-now">5:00</span></div>
+        <div class="adj-row">
+          <button class="btn btn-step" type="button" data-adj="-10">−10s</button>
+          <button class="btn btn-step" type="button" data-adj="-1">−1s</button>
+          <button class="btn btn-step" type="button" data-adj="1">+1s</button>
+          <button class="btn btn-step" type="button" data-adj="10">+10s</button>
+        </div>
+      </div>
+
+      <div class="adj-group">
+        <div class="adj-label">Round number <span id="adjRound" class="adj-now">1 of 3</span></div>
+        <div class="adj-row two">
+          <button class="btn btn-step" type="button" data-round="-1">− Round</button>
+          <button class="btn btn-step" type="button" data-round="1">+ Round</button>
+        </div>
+      </div>
+
+      <div class="adj-group">
+        <div class="adj-label">Reset</div>
+        <div class="adj-row two">
+          <button class="btn btn-danger" type="button" id="btnResetRound">Reset this round</button>
+          <button class="btn btn-danger" type="button" id="btnResetFight">Reset whole fight</button>
+        </div>
+        <p class="hint">Reset buttons ask you to tap twice, so a stray tap can't wipe the clock.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SETTINGS SHEET ===== -->
+  <div id="settingsSheet" class="sheet" hidden>
+    <div class="sheet-panel tall" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <div class="sheet-head">
+        <h2 id="settingsTitle">Settings</h2>
+        <button class="icon-btn" type="button" data-close="settingsSheet" aria-label="Close">✕</button>
+      </div>
+
+      <div class="set-scroll">
+        <h3>Fight</h3>
+        <div class="set-row">
+          <label>Round length</label>
+          <div class="seg" id="segRound">
+            <button type="button" data-round-len="180">3:00</button>
+            <button type="button" data-round-len="300">5:00</button>
+            <button type="button" data-round-len="custom">Custom</button>
+          </div>
+        </div>
+        <div class="set-row" id="customRoundRow" hidden>
+          <label>Custom round</label>
+          <div class="dur"><input id="roundMin" type="number" inputmode="numeric" min="0" max="59"><span>min</span><input id="roundSec" type="number" inputmode="numeric" min="0" max="59"><span>sec</span></div>
+        </div>
+        <div class="set-row">
+          <label for="rounds">Number of rounds</label>
+          <div class="stepper"><button type="button" data-step="rounds" data-d="-1">−</button><input id="rounds" type="number" inputmode="numeric" min="1" max="15"><button type="button" data-step="rounds" data-d="1">+</button></div>
+        </div>
+        <div class="set-row">
+          <label>Break between rounds</label>
+          <div class="dur"><input id="restMin" type="number" inputmode="numeric" min="0" max="59"><span>min</span><input id="restSec" type="number" inputmode="numeric" min="0" max="59"><span>sec</span></div>
+        </div>
+        <div class="set-row">
+          <label for="warnSec">Warning time</label>
+          <div class="stepper"><button type="button" data-step="warnSec" data-d="-1">−</button><input id="warnSec" type="number" inputmode="numeric" min="1" max="60"><button type="button" data-step="warnSec" data-d="1">+</button><span class="unit">sec</span></div>
+        </div>
+        <p class="hint">Warning time applies to every clock: last seconds of the round, before the end of the break, and before the time-out limit.</p>
+
+        <h3>Time-out clock</h3>
+        <div class="set-row">
+          <label>Direction</label>
+          <div class="seg" id="segDir">
+            <button type="button" data-dir="up">Count up</button>
+            <button type="button" data-dir="down">Count down</button>
+          </div>
+        </div>
+        <div class="set-row">
+          <label>Time-out limit</label>
+          <div class="dur"><input id="toMin" type="number" inputmode="numeric" min="0" max="59"><span>min</span><input id="toSec" type="number" inputmode="numeric" min="0" max="59"><span>sec</span></div>
+        </div>
+
+        <h3>Alerts</h3>
+        <div class="set-row">
+          <label for="soundOn">Sounds</label>
+          <label class="switch"><input id="soundOn" type="checkbox"><span></span></label>
+        </div>
+        <div class="alert-table" id="alertTable"></div>
+
+        <h3>My sounds</h3>
+        <div id="soundList" class="sound-list"></div>
+        <div class="sound-actions">
+          <label class="btn btn-ghost file-btn">Upload a sound<input id="soundUpload" type="file" accept="audio/*"></label>
+          <button id="btnRecord" class="btn btn-ghost" type="button">Record a sound</button>
+        </div>
+        <div id="recordBox" class="record-box" hidden>
+          <div id="recordStatus" class="record-status">Recording… 0s</div>
+          <button id="btnRecordStop" class="btn btn-danger" type="button">Stop</button>
+        </div>
+        <p id="soundMsg" class="hint"></p>
+
+        <h3>Screen</h3>
+        <div class="set-row">
+          <label for="keepAwakeOn">Keep screen on</label>
+          <label class="switch"><input id="keepAwakeOn" type="checkbox"><span></span></label>
+        </div>
+        <p class="hint" id="screenStatus"></p>
+        <button id="btnShowReminder" class="btn btn-ghost" type="button">Show Auto-Lock reminder</button>
+        <p class="hint small">Clock time is kept by the device clock, so it stays correct even if the screen briefly turns off.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== AUTO-LOCK REMINDER ===== -->
+  <div id="reminder" class="sheet center" hidden>
+    <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="remTitle">
+      <h2 id="remTitle">Keep the screen on</h2>
+      <p>Before timing, set your iPhone or iPad so the screen never locks:</p>
+      <ol class="steps">
+        <li>Open <b>Settings</b></li>
+        <li>Tap <b>Display &amp; Brightness</b></li>
+        <li>Tap <b>Auto-Lock</b></li>
+        <li>Choose <b>Never</b></li>
+      </ol>
+      <p class="hint">Set it back when the event is over, to save battery.</p>
+      <label class="check"><input id="remToday" type="checkbox"> Don't remind me again today</label>
+      <button id="remDone" class="btn btn-go wide" type="button">Done — start timing</button>
+    </div>
+  </div>
+
+  <!-- ===== TOAST ===== -->
+  <div id="toast" class="toast" hidden></div>
+</div>
+
+<script src="vendor/keepawake-media.js"></script>
+<script src="timer.js"></script>
+</body>
+</html>
