@@ -43,6 +43,8 @@
   --text: #f2f4f8;        /* main text, round clock digits */
   --main-time-color: var(--text);   /* round clock digits */
   --sub-time-color: var(--text);    /* time-out digits while running */
+  --sub-label-active-color: #ffffff; /* CHANGED Oct 5: "TIME-OUT" word while the time-out clock runs */
+  --nav-color: #ffffff;   /* CHANGED Oct 5: << II >> arrows (round clock + round number) */
   --muted: #8d96a6;       /* grey text: idle clock, READY, small print */
 
   /* ---- Backgrounds ---- */
@@ -51,7 +53,7 @@
   --panel-2: #1d222d;     /* inputs, grey buttons */
   --line: #2a303c;        /* borders */
 
-  /* ---- Main buttons (Reset, Adjust, Start, Time-Out) ---- */
+  /* ---- Main buttons (Reset, Start, Time-Out) ---- */
   --button-outline: #ffffff;      /* outline color */
   --button-outline-width: 2px;    /* outline thickness */
   --button-height: 54px;          /* button height */
@@ -110,6 +112,36 @@ button { font: inherit; color: inherit; }
 .dots i.now { background: var(--round); box-shadow: 0 0 0 3px rgba(95,208,104,.25); }
 .round-text { font-size: var(--round-text-size); font-weight: var(--weight-label); font-variant-numeric: tabular-nums; }
 
+/* CHANGED Oct 5: << >> and II buttons (plain white symbols, no box) */
+.nav-btn {
+  background: transparent; border: 0; padding: 0; margin: 0; cursor: pointer;
+  display: grid; place-items: center; color: var(--nav-color);
+  touch-action: manipulation; -webkit-touch-callout: none;
+}
+.nav-btn svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; overflow: visible; }
+.nav-btn svg .fill { fill: currentColor; stroke: none; }
+.nav-btn:disabled { opacity: .25; cursor: default; }
+.nav-btn:focus-visible { outline: 3px solid var(--text); outline-offset: 2px; border-radius: 8px; }
+.nav-btn:active:not(:disabled) { opacity: .6; }
+/* round number arrows: on each side, just above the dots */
+.round-nav { display: grid; grid-template-columns: auto 1fr auto; align-items: end; width: min(62vw, 320px, calc(var(--main-size) * .8)); row-gap: 4px; }
+.round-nav .dots { grid-column: 1 / -1; grid-row: 2; justify-self: center; }
+#btnRoundDown { grid-column: 1; grid-row: 1; }
+#btnRoundUp { grid-column: 3; grid-row: 1; }
+.round-arrow { width: 56px; height: 44px; }
+.round-arrow svg { width: 44px; height: 26px; }
+/* round clock controls: centered near the bottom of the ring */
+.clock-nav {
+  position: absolute; left: 50%; top: 71%; transform: translateX(-50%);
+  width: 56%; display: flex; justify-content: space-between; align-items: center;
+}
+.clock-arrow, .clock-pause { min-width: 48px; min-height: 48px; }
+.clock-arrow svg { width: calc(var(--main-size) * .12); height: calc(var(--main-size) * .075); }
+.clock-pause svg { width: calc(var(--main-size) * .06); height: calc(var(--main-size) * .08); }
+.clock-pause .ic-play { display: none; }
+.clock-pause.paused .ic-pause { display: none; }
+.clock-pause.paused .ic-play { display: block; }
+
 /* ---------- rings ---------- */
 .main-clock, .sub-clock { position: relative; display: grid; place-items: center; }
 .main-clock { width: var(--main-size); height: var(--main-size); }
@@ -139,6 +171,7 @@ button { font: inherit; color: inherit; }
 .sub-label { font-weight: var(--weight-label); letter-spacing: .12em; font-size: calc(var(--sub-size) * var(--sub-label-size)); color: var(--sub); }
 .sub-time { font-family: var(--font-clock); font-weight: var(--weight-clock); color: var(--sub-time-color); font-variant-numeric: tabular-nums; line-height: 1; font-size: calc(var(--sub-size) * var(--sub-time-size)); }
 .sub-time.idle { color: var(--muted); }
+.sub-label.active { color: var(--sub-label-active-color); } /* CHANGED Oct 5: white while time-out runs (red warning below still wins) */
 .sub-time.warn, .sub-label.warn { color: var(--warn); }
 .sub-mode { font-size: calc(var(--sub-size) * var(--sub-mode-size)); color: var(--muted); font-weight: 600; }
 
@@ -148,7 +181,8 @@ button { font: inherit; color: inherit; }
 @media (prefers-reduced-motion: reduce) { .flash { animation-duration: 2s; } }
 
 /* ---------- buttons ---------- */
-.controls { display: grid; grid-template-columns: .9fr .95fr 1.25fr 1.25fr; gap: 8px; width: min(100%, 560px); }
+/* CHANGED Oct 5: 3 buttons now (Adjust removed), centered */
+.controls { display: grid; grid-template-columns: 1fr 1.25fr 1.25fr; gap: 10px; width: min(100%, 480px); justify-self: center; }
 .btn {
   border: 1px solid var(--line); background: var(--panel-2); border-radius: 14px;
   min-height: 56px; padding: 10px 14px; font-weight: var(--weight-label); font-size: var(--button-text-size); letter-spacing: .06em;
@@ -200,6 +234,11 @@ button { font: inherit; color: inherit; }
   .main-clock { grid-area: main; } .round-info { grid-area: info; } .controls { grid-area: ctl; align-self: end; } .sub-clock { grid-area: sub; align-self: start; }
   .controls .btn { min-height: 46px; }
   .round-text { font-size: 20px; }
+  /* CHANGED Oct 5: phone sideways: round arrows on the same line as the dots, to save height */
+  .round-nav { align-items: center; }
+  .round-nav .dots { grid-column: 2; grid-row: 1; }
+  .round-arrow { height: 24px; }
+  .round-arrow svg { width: 34px; height: 20px; }
 }
 
 /* ---------- sheets (Adjust, Settings, reminder) ---------- */

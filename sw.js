@@ -1,7 +1,7 @@
 /* Offline helper: saves the app's files on the device the first time it opens,
    so the timer still opens with no internet. Change VERSION after every update
    so devices pick up the new files. */
-const VERSION = "mmatk-v1";
+const VERSION = "mmatk-v2";
 const FILES = ["./", "./index.html", "./style.css", "./timer.js", "./manifest.json",
   "./vendor/keepawake-media.js", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/apple-touch-icon.png"];
 

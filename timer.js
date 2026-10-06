@@ -139,19 +139,42 @@
     changed();
   }
 
+  // CHANGED Oct 5: << >> inside the round clock work in these phases only (not during the break or after the fight)
+  const canAdjustTime = () => S.phase === "ready" || S.phase === "running" || S.phase === "paused" || S.phase === "timeout";
+  // CHANGED Oct 5: round number arrows are locked while the round clock is running
+  const canAdjustRound = () => S.phase !== "running";
+
   function adjustMain(deltaSec) {
-    const t = now(), d = ms(deltaSec), max = roundMs();
+    if (!canAdjustTime()) return;
+    // CHANGED Oct 5: lowest is 0:01 (was 0:00), so rewinding can never end the round by accident
+    const t = now(), d = ms(deltaSec), max = roundMs(), min = 1000;
     if (S.phase === "running") {
-      const r = Math.min(max, Math.max(0, mainRemaining(t) + d));
+      const r = Math.min(max, Math.max(min, mainRemaining(t) + d));
       S.mainEndAt = t + r;
       if (r > warnMs()) S.fired.roundWarn = false;
-    } else if (S.phase !== "over") {
-      S.mainRemain = Math.min(max, Math.max(0, S.mainRemain + d));
+    } else {
+      S.mainRemain = Math.min(max, Math.max(min, S.mainRemain + d));
       if (S.mainRemain > warnMs()) S.fired.roundWarn = false;
     }
     changed();
   }
+
+  // CHANGED Oct 5: PAUSE (II) freezes the round clock only. The time-out clock does not start.
+  // Tapping again (play triangle) continues from the same time.
+  function onPauseButton() {
+    const t = now();
+    if (S.phase === "running") {
+      S.mainRemain = mainRemaining(t);
+      S.phase = "paused";
+    } else if (S.phase === "paused") {
+      S.phase = "running";
+      S.mainEndAt = t + S.mainRemain;
+    } else return;
+    changed();
+  }
+
   function adjustRound(d) {
+    if (!canAdjustRound()) return;
     S.round = Math.min(cfg.rounds, Math.max(1, S.round + d));
     if (S.phase === "over") { S.phase = "ready"; S.mainRemain = roundMs(); }
     changed();
@@ -214,7 +237,10 @@
     mainRing: $("mainRing"), subRing: $("subRing"), mainTime: $("mainTime"), mainLabel: $("mainLabel"),
     subTime: $("subTime"), subLabel: $("subLabel"), subMode: $("subMode"),
     roundText: $("roundText"), roundDots: $("roundDots"),
-    btnMain: $("btnMain"), btnTimeout: $("btnTimeout"), adjNow: $("adjNow"), adjRound: $("adjRound")
+    btnMain: $("btnMain"), btnTimeout: $("btnTimeout"),
+    // CHANGED Oct 5: Adjust panel (adjNow, adjRound) removed; new arrow and pause buttons added
+    btnPause: $("btnPause"), btnBack: $("btnBack"), btnFwd: $("btnFwd"),
+    btnRoundDown: $("btnRoundDown"), btnRoundUp: $("btnRoundUp")
   };
   el.mainRing.style.strokeDasharray = CIRC_MAIN;
   el.subRing.style.strokeDasharray = CIRC_SUB;
@@ -253,16 +279,26 @@
       dots += '<i class="' + (i === shownRound && S.phase !== "over" ? "now" : done ? "done" : "") + '"></i>';
     }
     el.roundDots.innerHTML = dots;
-    setText(el.adjRound, shownRound + " of " + cfg.rounds);
+
+    // CHANGED Oct 5: round number arrows (locked while running; dimmed at round 1 / last round)
+    el.btnRoundDown.disabled = !canAdjustRound() || S.round <= 1;
+    el.btnRoundUp.disabled = !canAdjustRound() || S.round >= cfg.rounds;
+
+    // CHANGED Oct 5: << II >> inside the round clock
+    el.btnBack.disabled = el.btnFwd.disabled = !canAdjustTime();
+    el.btnPause.disabled = !(S.phase === "running" || S.phase === "paused");
+    el.btnPause.classList.toggle("paused", S.phase === "paused");
+    el.btnPause.setAttribute("aria-label", S.phase === "paused" ? "Continue round clock" : "Pause round clock");
 
     // main button
     const b = el.btnMain;
-    // While the round runs (or during a time-out) the green button shows the round number
-    const showRound = S.phase === "running" || S.phase === "timeout";
+    // While the round runs (or during a time-out, or paused) the green button shows the round number
+    // CHANGED Oct 5: also while paused (resume with the play triangle inside the clock)
+    const showRound = S.phase === "running" || S.phase === "timeout" || S.phase === "paused";
     b.disabled = showRound;
     b.classList.toggle("showround", showRound);
     setText(b, {
-      ready: "Start Rd " + S.round, running: "Round " + S.round, paused: "Resume",
+      ready: "Start Rd " + S.round, running: "Round " + S.round, paused: "Round " + S.round, // CHANGED Oct 5: was "Resume"
       timeout: "Round " + S.round, rest: "Start Rd " + S.round, over: "New Fight"
     }[S.phase]);
 
@@ -282,8 +318,7 @@
     const r = mainRemaining(t);
     const inRound = S.phase === "running" || S.phase === "paused" || S.phase === "timeout";
     const mainWarn = inRound && r > 0 && r <= warnMs();
-    setText(el.mainTime, fmtDown(r));
-    setText(el.adjNow, fmtDown(r));
+    setText(el.mainTime, fmtDown(r)); // CHANGED Oct 5: Adjust panel time display removed
     const frac = S.phase === "over" ? 0 : Math.min(1, r / roundMs());
     el.mainRing.style.strokeDashoffset = CIRC_MAIN * (1 - frac);
     setCls(el.mainRing, "hide", frac <= 0);
@@ -293,8 +328,10 @@
     setCls(el.mainTime, "flash", flashMain);
     setCls(el.mainRing, "flash", flashMain);
 
+    // CHANGED Oct 5: during the red warning, "FIGHT IN PROGRESS" becomes "10-SEC WARNING"
+    // (the number follows Warning time in Settings)
     const label = {
-      ready: "READY", running: "FIGHT IN PROGRESS", paused: "PAUSED", timeout: "TIME-OUT",
+      ready: "READY", running: mainWarn ? cfg.warnSec + "-SEC WARNING" : "FIGHT IN PROGRESS", paused: "PAUSED", timeout: "TIME-OUT",
       rest: breakName(), over: "FIGHT OVER"
     }[S.phase];
     setText(el.mainLabel, label);
@@ -329,6 +366,7 @@
     setCls(el.subRing, "hide", subFrac <= 0 || subIdle && cfg.toDir !== "down");
     setCls(el.subRing, "warn", subWarn);
     setCls(el.subTime, "warn", subWarn); setCls(el.subLabel, "warn", subWarn);
+    setCls(el.subLabel, "active", S.subKind === "timeout"); // CHANGED Oct 5: "TIME-OUT" turns white while the time-out clock runs
     setCls(el.subTime, "idle", subIdle);
     const flashSub = !!flashKey && cfg.events[flashKey].flash;
     setCls(el.subTime, "flash", flashSub); setCls(el.subRing, "flash", flashSub);
@@ -576,12 +614,41 @@
   /* ---------------- WIRING BUTTONS ---------------- */
   $("btnMain").addEventListener("click", () => { keepAwake.enable(); onMainButton(); });
   $("btnTimeout").addEventListener("click", () => { keepAwake.enable(); onTimeoutButton(); });
-  $("btnAdjust").addEventListener("click", () => { $("adjustSheet").hidden = false; });
+  // CHANGED Oct 5: Adjust button removed. New buttons:
+  el.btnPause.addEventListener("click", () => { keepAwake.enable(); onPauseButton(); });
+  el.btnRoundDown.addEventListener("click", () => adjustRound(-1));
+  el.btnRoundUp.addEventListener("click", () => adjustRound(1));
+
+  // << >> inside the round clock: quick tap = 1 second; press and hold = 10 seconds per step until released
+  function holdButton(btn, dir) {
+    const HOLD_START = 450, HOLD_REPEAT = 400; // milliseconds
+    let startT = null, repeatT = null, held = false, active = false;
+    function stop() { clearTimeout(startT); clearInterval(repeatT); startT = repeatT = null; active = false; }
+    btn.addEventListener("pointerdown", (e) => {
+      if (btn.disabled) return;
+      active = true; held = false;
+      try { btn.setPointerCapture(e.pointerId); } catch (err) {}
+      startT = setTimeout(() => {
+        held = true; adjustMain(dir * 10);
+        repeatT = setInterval(() => { if (btn.disabled) stop(); else adjustMain(dir * 10); }, HOLD_REPEAT);
+      }, HOLD_START);
+    });
+    btn.addEventListener("pointerup", () => {
+      const wasTap = active && !held;
+      stop();
+      if (wasTap) adjustMain(dir * 1);
+    });
+    btn.addEventListener("pointercancel", stop);
+    btn.addEventListener("lostpointercapture", () => { if (held) stop(); });
+    btn.addEventListener("contextmenu", (e) => e.preventDefault()); // no long-press menu
+    btn.addEventListener("click", (e) => { if (e.detail === 0) adjustMain(dir * 1); }); // keyboard Enter/Space
+  }
+  holdButton(el.btnBack, 1);   // CHANGED Oct 5: << adds time (clock number gets larger)
+  holdButton(el.btnFwd, -1);   // CHANGED Oct 5: >> takes time off (clock number gets smaller)
+
   $("openSettings").addEventListener("click", () => { fillSettings(); $("settingsSheet").hidden = false; });
   document.querySelectorAll("[data-close]").forEach((b) => b.addEventListener("click", () => { $(b.dataset.close).hidden = true; }));
   document.querySelectorAll(".sheet").forEach((sh) => sh.addEventListener("click", (e) => { if (e.target === sh && sh.id !== "reminder") sh.hidden = true; }));
-  document.querySelectorAll("[data-adj]").forEach((b) => b.addEventListener("click", () => adjustMain(+b.dataset.adj)));
-  document.querySelectorAll("[data-round]").forEach((b) => b.addEventListener("click", () => adjustRound(+b.dataset.round)));
 
   // Two-tap confirm for resets
   // First tap arms the button (turns red); second tap within 3 seconds does it.
@@ -591,15 +658,14 @@
       btn.dataset.label = btn.dataset.label || btn.textContent;
       if (btn.classList.contains("armed")) {
         clearTimeout(t); btn.classList.remove("armed"); btn.textContent = btn.dataset.label;
-        action(); $("adjustSheet").hidden = true; toast(doneText || "Done"); return;
+        action(); toast(doneText || "Done"); return; // CHANGED Oct 5: no Adjust panel to close
       }
       btn.classList.add("armed"); btn.textContent = confirmText || "Tap again to confirm";
       clearTimeout(t);
       t = setTimeout(() => { btn.classList.remove("armed"); btn.textContent = btn.dataset.label; }, 3000);
     });
   }
-  armed($("btnResetRound"), resetRound);
-  armed($("btnResetFight"), newFight);
+  // CHANGED Oct 5: "Reset this round" and "Reset whole fight" (Adjust panel) removed
   // RESET button: start over, back to Round 1, both clocks cleared
   armed($("btnReset"), newFight, "Sure?", "Reset to Round 1");
 

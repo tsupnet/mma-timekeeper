@@ -28,7 +28,16 @@
   <main class="stage">
     <!-- ===== ROUND COUNTER ===== -->
     <section class="round-info" aria-live="polite">
-      <div id="roundDots" class="dots"></div>
+      <!-- CHANGED Oct 5: << >> above the dots change the round number (locked while the round clock runs) -->
+      <div class="round-nav">
+        <button id="btnRoundDown" class="nav-btn round-arrow" type="button" aria-label="Previous round">
+          <svg viewBox="0 0 32 20" aria-hidden="true"><path d="M14 2 L3 10 L14 18 M29 2 L18 10 L29 18"/></svg>
+        </button>
+        <button id="btnRoundUp" class="nav-btn round-arrow" type="button" aria-label="Next round">
+          <svg viewBox="0 0 32 20" aria-hidden="true"><path d="M3 2 L14 10 L3 18 M18 2 L29 10 L18 18"/></svg>
+        </button>
+        <div id="roundDots" class="dots"></div>
+      </div>
       <div id="roundText" class="round-text">Round 1 of 3</div>
     </section>
 
@@ -42,12 +51,27 @@
         <div class="main-time" id="mainTime">5:00</div>
         <div class="main-label" id="mainLabel">READY</div>
       </div>
+      <!-- CHANGED Oct 5: rewind / pause / advance inside the round clock.
+           << >> : tap = 1 second, press and hold = 10 seconds per step.
+           II : freezes the round clock only (changes to a play triangle; tap it to continue). -->
+      <div class="clock-nav">
+        <button id="btnBack" class="nav-btn clock-arrow" type="button" aria-label="Rewind: add time to the round clock">
+          <svg viewBox="0 0 32 20" aria-hidden="true"><path d="M14 2 L3 10 L14 18 M29 2 L18 10 L29 18"/></svg>
+        </button>
+        <button id="btnPause" class="nav-btn clock-pause" type="button" aria-label="Pause round clock">
+          <svg class="ic-pause" viewBox="0 0 20 24" aria-hidden="true"><path d="M6 2 V22 M14 2 V22"/></svg>
+          <svg class="ic-play" viewBox="0 0 20 24" aria-hidden="true"><path class="fill" d="M4 2 L18 12 L4 22 Z"/></svg>
+        </button>
+        <button id="btnFwd" class="nav-btn clock-arrow" type="button" aria-label="Advance: take time off the round clock">
+          <svg viewBox="0 0 32 20" aria-hidden="true"><path d="M3 2 L14 10 L3 18 M18 2 L29 10 L18 18"/></svg>
+        </button>
+      </div>
     </section>
 
     <!-- ===== BUTTONS (between the two clocks) ===== -->
+    <!-- CHANGED Oct 5: Adjust button removed. 3 buttons, centered. -->
     <section class="controls">
       <button id="btnReset" class="btn btn-reset" type="button">Reset</button>
-      <button id="btnAdjust" class="btn btn-ghost" type="button">Adjust</button>
       <button id="btnMain" class="btn btn-go" type="button">Start</button>
       <button id="btnTimeout" class="btn btn-to" type="button" disabled>Time-Out</button>
     </section>
@@ -66,42 +90,7 @@
     </section>
   </main>
 
-  <!-- ===== ADJUST SHEET ===== -->
-  <div id="adjustSheet" class="sheet" hidden>
-    <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="adjustTitle">
-      <div class="sheet-head">
-        <h2 id="adjustTitle">Adjust</h2>
-        <button class="icon-btn" type="button" data-close="adjustSheet" aria-label="Close">✕</button>
-      </div>
-
-      <div class="adj-group">
-        <div class="adj-label">Round clock <span id="adjNow" class="adj-now">5:00</span></div>
-        <div class="adj-row">
-          <button class="btn btn-step" type="button" data-adj="-10">−10s</button>
-          <button class="btn btn-step" type="button" data-adj="-1">−1s</button>
-          <button class="btn btn-step" type="button" data-adj="1">+1s</button>
-          <button class="btn btn-step" type="button" data-adj="10">+10s</button>
-        </div>
-      </div>
-
-      <div class="adj-group">
-        <div class="adj-label">Round number <span id="adjRound" class="adj-now">1 of 3</span></div>
-        <div class="adj-row two">
-          <button class="btn btn-step" type="button" data-round="-1">− Round</button>
-          <button class="btn btn-step" type="button" data-round="1">+ Round</button>
-        </div>
-      </div>
-
-      <div class="adj-group">
-        <div class="adj-label">Reset</div>
-        <div class="adj-row two">
-          <button class="btn btn-danger" type="button" id="btnResetRound">Reset this round</button>
-          <button class="btn btn-danger" type="button" id="btnResetFight">Reset whole fight</button>
-        </div>
-        <p class="hint">Reset buttons ask you to tap twice, so a stray tap can't wipe the clock.</p>
-      </div>
-    </div>
-  </div>
+  <!-- CHANGED Oct 5: ADJUST SHEET removed (its jobs moved to the << II >> buttons and the round arrows) -->
 
   <!-- ===== SETTINGS SHEET ===== -->
   <div id="settingsSheet" class="sheet" hidden>
