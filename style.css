@@ -173,7 +173,7 @@ button { font: inherit; color: inherit; }
 .sub-time.idle { color: var(--muted); }
 .sub-label.active { color: var(--sub-label-active-color); } /* CHANGED Oct 5: white while time-out runs (red warning below still wins) */
 .sub-time.warn, .sub-label.warn { color: var(--warn); }
-.sub-mode { font-size: calc(var(--sub-size) * var(--sub-mode-size)); color: var(--muted); font-weight: 600; }
+.sub-mode { display: none; font-size: calc(var(--sub-size) * var(--sub-mode-size)); color: var(--muted); font-weight: 600; } /* CHANGED Oct 5: "Count Up / Count Down" hidden. Delete "display: none;" to show it again */
 
 /* flashing warning (can be switched off per alert in Settings) */
 .flash { animation: flash 1s steps(2, jump-none) infinite; }
@@ -182,7 +182,8 @@ button { font: inherit; color: inherit; }
 
 /* ---------- buttons ---------- */
 /* CHANGED Oct 5: 3 buttons now (Adjust removed), centered */
-.controls { display: grid; grid-template-columns: 1fr 1.25fr 1.25fr; gap: 10px; width: min(100%, 480px); justify-self: center; }
+/* CHANGED Oct 5 (2): all 3 buttons the same width, so the middle (Start) button sits exactly centered over the time-out clock */
+.controls { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: min(100%, 480px); justify-self: center; }
 .btn {
   border: 1px solid var(--line); background: var(--panel-2); border-radius: 14px;
   min-height: 56px; padding: 10px 14px; font-weight: var(--weight-label); font-size: var(--button-text-size); letter-spacing: .06em;
